@@ -5,6 +5,7 @@ const fs = require('fs');
 const iconv = require('iconv-lite');
 const { db } = require('../../app/database');
 const { BrowserWindow, session } = require('electron');
+const { findLatestGachaUrl } = require('./wuwaLogParser');
 
 // 注册表路径列表
 const registryPaths = [
@@ -96,7 +97,8 @@ async function getGamePath() {
 
 // 读取日志文件并提取祈愿链接
 function extractGachaUrl(logFilePath) {
-    const tempLogFilePath = path.join(process.env.NEKO_GAME_FOLDER_PATH, 'Client_temp.log'); // 使用全局定义的临时路径
+    const tempRoot = process.env.NEKO_GAME_FOLDER_PATH || path.dirname(logFilePath);
+    const tempLogFilePath = path.join(tempRoot, `Client_temp_${process.pid}.log`);
 
     return new Promise((resolve, reject) => {
         // 尝试将日志文件复制到临时目录
@@ -106,7 +108,7 @@ function extractGachaUrl(logFilePath) {
                 return openCloudGachaFallback(resolve, reject);
             }
             // 从临时文件读取内容
-            fs.readFile(tempLogFilePath, 'utf8', (readErr, data) => {
+            fs.readFile(tempLogFilePath, (readErr, data) => {
                 fs.unlink(tempLogFilePath, (unlinkErr) => {
                     if (unlinkErr) console.warn('删除临时文件失败:', unlinkErr.message);
                 });
@@ -116,17 +118,12 @@ function extractGachaUrl(logFilePath) {
                     return openCloudGachaFallback(resolve, reject);
                 }
 
-                // 使用正则提取符合模式的 URL
-                const urlRegex = /https:\/\/aki-gm-resources\.(?:aki-game\.com|oversea\.aki-game\.net)\/aki\/gacha\/index\.html#\/record\?[^ ]+/g;
-                const matches = data.match(urlRegex);
-
-                if (matches && matches.length > 0) {
-                    let gachaUrl = matches[matches.length - 1]; // 获取最后一个匹配的 URL
-
-                    gachaUrl = gachaUrl.split('"')[0];
-                    resolve(gachaUrl); // 成功拿到本地链接，正常返回
+                const gachaUrl = findLatestGachaUrl(data);
+                if (gachaUrl) {
+                    console.log('[本地日志] 已解码并提取最新祈愿链接');
+                    resolve(gachaUrl);
                 } else {
-                    console.warn('[本地日志] 未找到祈愿链接，自动转向云鸣潮获取...');
+                    console.warn('[本地日志] 明文和 XOR 解码日志均未找到祈愿链接，自动转向云鸣潮获取...');
                     openCloudGachaFallback(resolve, reject);
                 }
             });

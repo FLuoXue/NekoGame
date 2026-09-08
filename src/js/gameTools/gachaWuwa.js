@@ -75,7 +75,7 @@ async function loadGachaRecords(uid) {
     const pools = categorizeRecords(filteredRecords);
     const GACHA_TYPE_ORDER = [
         "角色活动唤取", "武器活动唤取", "角色联动唤取", "武器联动唤取","角色新旅唤取", "武器新旅唤取",
-        "角色常驻唤取", "武器常驻唤取", "新手唤取", "新手自选唤取",
+        "角色忆旅唤取", "武器忆旅唤取", "角色常驻唤取", "武器常驻唤取", "新手唤取", "新手自选唤取",
         "感恩定向唤取",
     ];
 

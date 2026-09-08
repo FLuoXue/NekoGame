@@ -15,6 +15,8 @@ const GACHA_TYPE_MAP = {
     9: "武器新旅唤取",
     10: "角色联动唤取",
     11: "武器联动唤取",
+    12: "角色忆旅唤取",
+    13: "武器忆旅唤取",
 };
 
 const BASE_URL = "https://gmserver-api.aki-game2.com/gacha/record/query";
